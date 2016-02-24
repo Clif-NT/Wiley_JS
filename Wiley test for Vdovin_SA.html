@@ -1,0 +1,131 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Wiley test for Vdovin_SA</title>
+<script type="text/javascript" src="http://tablesorter.com/jquery-latest.js"></script>
+<script type="text/javascript" src="http://tablesorter.com/__jquery.tablesorter.min.js"></script>
+<script>
+var todo_status = "Запланировано|В работе|Выполнено|Отменено";
+var todo_title_min = 10;
+var todo_title_max = 250;
+
+function supp_LS() {
+	try {
+    	return 'localStorage' in window && window['localStorage'] !== null;
+	} catch (e) { return false; }
+}
+
+function LS_Set(){
+	if (!supp_LS()) { return false; }
+	var LS = window['localStorage'];
+	localStorage["ToDo.items.0.title"] = "Получить задание";
+	localStorage["ToDo.items.0.status"] = "Выполнено";
+	localStorage["ToDo.items.1.title"] = "Открыть и удивиться, что работает";
+	localStorage["ToDo.items.1.status"] = "В работе";
+	localStorage["ToDo.items.2.title"] = "Проверить добавление элемента";
+	localStorage["ToDo.items.2.status"] = "Запланировано";
+	localStorage["ToDo.items.3.title"] = "Кликнуть на элемент и проверить редактирование элемента";
+	localStorage["ToDo.items.3.status"] = "Запланировано";
+	localStorage["ToDo.items.count"] = 4;
+}
+
+function LS_Form(id){
+	var id = id || -1 ;
+	title = (id!=-1 ? localStorage["ToDo.items."+id+".title"] : "");
+	status = (id!=-1 ? localStorage["ToDo.items."+id+".status"] : "");
+	
+	var status_arr = todo_status.split('|');
+	var status_html = "";
+	for(i = 0; i < status_arr.length; i++){
+    	status_html+= "<option value='"+status_arr[i]+"' "+(status_arr[i]==status ? "selected" : "")+">"+status_arr[i]+"</option>";
+	}
+
+	html = "<div id='add'>";
+	html+= "<div><input type='text' value='"+title+"' name='title' /><select name='status'>"+status_html+"</select>";
+	html+= "<input type='text' name='id' value='"+id+"' style='display:none' /></div>";   
+	html+= "<div id='btn'><input type='button' value='Сохранить' onclick='LS_edit()' />";
+	html+= (id!=-1 ? "<input type='button' value='Удалить' onclick='LS_del()' />" : "");
+	html+= "<input type='button' value='Очистить' onclick='LS_Form()' /></div></div><div id='list'></div>";
+	$('#LS').html(html);
+	LS_List();
+}
+function LS_List(){
+	c = localStorage["ToDo.items.count"];
+	if(c>0){
+		html = "<table id='list_table' class='tablesorter'><thead><tr><th>Наименование</th><th>Статус</th></tr></thead>";
+		for(i=0; i<c; i++){
+			if(localStorage["ToDo.items."+i+".title"]){
+				html+= "<tr onclick='LS_Form(\""+i+"\")'><td>"+localStorage["ToDo.items."+i+".title"]+"</td>";
+				html+= "<td>"+localStorage["ToDo.items."+i+".status"]+"</td></tr>";
+			}
+		}
+		html+= "</table>";
+		$('#list').html(html);
+		$('#list_table').tablesorter();
+	}
+}
+function LS_edit(){
+	id = $('#add input[name="id"]').val();
+	title = $('#add input[name="title"]').val();
+	status = $('#add select option:selected').val();
+	if(title.length < todo_title_min){alert('Наименование менее '+todo_title_min+' знаков');return false;}
+	if(title.length > todo_title_max){alert('Наименование превысило '+todo_title_max+' знаков');return false;}
+	
+	if(id<0){ 
+		id = localStorage["ToDo.items.count"];
+		localStorage["ToDo.items.count"] = parseInt(id)+1;
+	}
+	localStorage["ToDo.items."+id+".title"] = title;
+	localStorage["ToDo.items."+id+".status"] = status;
+	LS_Form();
+}
+function LS_del(){
+	id = $('#add input[name="id"]').val();
+	if(id>=0){ 
+		localStorage.removeItem("ToDo.items."+id+".title");
+		localStorage.removeItem("ToDo.items."+id+".status");
+		LS_Form();
+	}
+}
+
+/* OnLoad */
+$(document).ready(function(){ 
+	LS_Set();LS_Form();
+});
+
+</script>
+
+<style>
+/* Стили формы */
+#LS { width:400px; }
+#add div input[name='title'] { width:264px; margin-right:10px; }
+#add div select { width:120px; }
+#btn {text-align:center;}
+#btn input { margin: 4px 10px; padding:2px 6px;}
+/* Стили для таблицы */
+.tablesorter {
+	font-family:arial;	background-color: #CDCDCD;	margin:10px 0pt 15px;	font-size: 8pt;	width: 100%;	text-align: left;}
+.tablesorter thead tr th, table.tablesorter tfoot tr th {
+	background-color: #e6EEEE;	border: 1px solid #FFF;	font-size: 8pt;	padding: 4px;}
+.tablesorter thead tr .header {
+	background-repeat: no-repeat;	background-position: center right;	cursor: pointer;}
+.tablesorter tbody td {
+	color: #3D3D3D;	padding: 4px;	background-color: #FFF;	vertical-align: top;}
+.tablesorter tbody tr.odd td {
+	background-color:#F0F0F6;}
+.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+	background-color: #8dbdd8;}
+</style>
+</head>
+
+<body>
+
+<div id="LS">
+localStorage не поддерживается браузером.
+</div>
+
+<input type="button" value="Обновить БД" onclick="LS_Set();LS_Form();" />
+</body>
+</html>
